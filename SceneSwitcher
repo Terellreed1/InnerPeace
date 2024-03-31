@@ -1,0 +1,18 @@
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+public class SceneSwitcher : MonoBehaviour
+{
+	// Public variable to hold the name of the scene to switch to
+	public string sceneName;
+
+	void Update()
+	{
+		// Check if the user pressed the 'A' key
+		if (Input.GetKeyDown(KeyCode.A))
+		{
+			// If 'A' is pressed, switch to the specified scene
+			SceneManager.LoadScene(sceneName);
+		}
+	}
+}
