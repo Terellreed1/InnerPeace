@@ -1,0 +1,69 @@
+using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.Networking;
+using System.Collections;
+
+public class LocationBasedSearch : MonoBehaviour
+{
+    public Text statusText;
+    public Text resultsText;
+
+    private string apiKey = "YOUR_API_KEY";
+    private string apiUrl = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?";
+
+    private void Start()
+    {
+        StartCoroutine(GetLocation());
+    }
+
+    private IEnumerator GetLocation()
+    {
+        statusText.text = "Getting location...";
+
+        if (!Input.location.isEnabledByUser)
+        {
+            statusText.text = "Location service not enabled by user.";
+            yield break;
+        }
+
+        Input.location.Start();
+
+        while (Input.location.status == LocationServiceStatus.Initializing)
+        {
+            yield return new WaitForSeconds(0.5f);
+        }
+
+        if (Input.location.status == LocationServiceStatus.Failed)
+        {
+            statusText.text = "Failed to get location.";
+            yield break;
+        }
+
+        statusText.text = "Searching for nearby offices...";
+
+        float latitude = Input.location.lastData.latitude;
+        float longitude = Input.location.lastData.longitude;
+
+        yield return StartCoroutine(SearchNearbyOffices(latitude, longitude));
+    }
+
+    private IEnumerator SearchNearbyOffices(float latitude, float longitude)
+    {
+        string url = apiUrl + "location=" + latitude + "," + longitude + "&radius=5000&keyword=therapy+doctor&key=" + apiKey;
+
+        UnityWebRequest www = UnityWebRequest.Get(url);
+        yield return www.SendWebRequest();
+
+        if (www.result == UnityWebRequest.Result.Success)
+        {
+            string jsonResponse = www.downloadHandler.text;
+            // Parse the JSON response and extract the relevant information
+            // Display the results to the user
+            resultsText.text = "Nearby Offices:\n" + jsonResponse;
+        }
+        else
+        {
+            statusText.text = "Error searching for nearby offices.";
+        }
+    }
+}
