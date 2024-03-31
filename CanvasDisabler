@@ -1,0 +1,43 @@
+using UnityEngine;
+using UnityEngine.UI;
+
+public class CanvasDisabler : MonoBehaviour
+{
+	[SerializeField] private float delayDuration = 2f;
+
+	private Button button;
+	private Image buttonImage;
+
+	private void Start()
+	{
+		// Get the Button component attached to this GameObject
+		button = GetComponent<Button>();
+
+		// Get the Image component of the button
+		buttonImage = GetComponent<Image>();
+
+		// Start the coroutine to disable the button and its children after the specified delay
+		StartCoroutine(DisableButtonAndChildrenAfterDelay());
+	}
+
+	private System.Collections.IEnumerator DisableButtonAndChildrenAfterDelay()
+	{
+		// Wait for the specified delay duration
+		yield return new WaitForSeconds(delayDuration);
+
+		// Disable the button
+		button.interactable = false;
+
+		// Make the button image transparent
+		Color color = buttonImage.color;
+		color.a = 0f;
+		buttonImage.color = color;
+
+		// Disable all the child objects of the button
+		foreach (Transform child in button.transform)
+		{
+			GameObject childObject = child.gameObject;
+			childObject.SetActive(false);
+		}
+	}
+}
