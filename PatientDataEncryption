@@ -1,0 +1,60 @@
+using System.IO;
+using System.Security.Cryptography;
+using UnityEngine;
+
+public class PatientDataEncryption : MonoBehaviour
+{
+	private const string EncryptionKey = "368ySS/SZaq/yO3q7yk9i1BEgHqPgNpTyykHiqRVglTp2SL9HJzlceq+JS/ncerd";
+
+	private void Start()
+	{
+		// Register the event handler for file changes
+		FileSystemWatcher watcher = new FileSystemWatcher();
+		watcher.Path = Application.persistentDataPath;
+		watcher.Filter = "patient*";
+		watcher.NotifyFilter = NotifyFilters.LastWrite;
+		watcher.Changed += OnFileChanged;
+		watcher.EnableRaisingEvents = true;
+	}
+
+	private void OnFileChanged(object source, FileSystemEventArgs e)
+	{
+		string filePath = e.FullPath;
+
+		// Check if the file starts with "patient"
+		if (Path.GetFileName(filePath).StartsWith("patient"))
+		{
+			// Encrypt the file
+			EncryptFile(filePath, EncryptionKey);
+
+			Debug.Log("Encrypted file: " + filePath);
+		}
+	}
+
+	private void EncryptFile(string filePath, string encryptionKey)
+	{
+		byte[] encryptionKeyBytes = System.Text.Encoding.UTF8.GetBytes(encryptionKey);
+
+		using (Aes aes = Aes.Create())
+		{
+			aes.Key = encryptionKeyBytes;
+			aes.Mode = CipherMode.CBC;
+			aes.Padding = PaddingMode.PKCS7;
+
+			byte[] iv = aes.IV;
+
+			using (FileStream fileStream = new FileStream(filePath, FileMode.Open, FileAccess.ReadWrite))
+			{
+				fileStream.Write(iv, 0, iv.Length);
+
+				using (CryptoStream cryptoStream = new CryptoStream(fileStream, aes.CreateEncryptor(), CryptoStreamMode.Write))
+				{
+					using (StreamWriter streamWriter = new StreamWriter(cryptoStream))
+					{
+						streamWriter.Write(File.ReadAllText(filePath));
+					}
+				}
+			}
+		}
+	}
+}
